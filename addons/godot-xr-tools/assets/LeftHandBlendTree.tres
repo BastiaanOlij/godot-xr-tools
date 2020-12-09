@@ -19,7 +19,6 @@ animation = "Grip"
 [sub_resource type="AnimationNodeTimeSeek" id=7]
 
 [resource]
-graph_offset = Vector2( -144.181, 1.39384 )
 "nodes/Animation 2/node" = SubResource( 1 )
 "nodes/Animation 2/position" = Vector2( 140, 240 )
 nodes/Blend2/node = SubResource( 2 )
@@ -35,4 +34,4 @@ nodes/SetGrip/position = Vector2( 360, 40 )
 nodes/SetIndex/node = SubResource( 7 )
 nodes/SetIndex/position = Vector2( 360, 240 )
 nodes/output/position = Vector2( 1020, 80 )
-node_connections = [ "Blend2", 0, "GripTimeScale", "Blend2", 1, "IndexTimeScale", "GripTimeScale", 0, "SetGrip", "output", 0, "Blend2", "IndexTimeScale", 0, "SetIndex", "SetGrip", 0, "GripAnimation", "SetIndex", 0, "Animation 2" ]
+node_connections = [ "IndexTimeScale", 0, "SetIndex", "Blend2", 0, "GripTimeScale", "Blend2", 1, "IndexTimeScale", "GripTimeScale", 0, "SetGrip", "SetIndex", 0, "Animation 2", "SetGrip", 0, "GripAnimation", "output", 0, "Blend2" ]
