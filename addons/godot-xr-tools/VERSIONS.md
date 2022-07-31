@@ -1,5 +1,6 @@
 # 2.6.0
 - Fixed enforcement of direct-movement maximum speed
+- Added collision bouncing to PlayerBody
 
 # 2.5.0
 - Added advanced player height control
