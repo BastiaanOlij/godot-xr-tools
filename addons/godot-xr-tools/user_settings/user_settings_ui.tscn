@@ -8,7 +8,6 @@ tab_align = 0
 script = ExtResource( 1 )
 
 [node name="Input" type="VBoxContainer" parent="."]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 4.0
@@ -34,15 +33,38 @@ margin_left = 104.0
 margin_right = 128.0
 margin_bottom = 24.0
 
-[node name="HSeparator" type="HSeparator" parent="Input"]
+[node name="VignetteLinear" type="HBoxContainer" parent="Input"]
 margin_top = 28.0
 margin_right = 242.0
-margin_bottom = 32.0
+margin_bottom = 49.0
+
+[node name="Label" type="Label" parent="Input/VignetteLinear"]
+margin_right = 100.0
+margin_bottom = 21.0
+rect_min_size = Vector2( 100, 21 )
+text = "Vignette:"
+align = 2
+valign = 1
+
+[node name="VignetteVelocityLimit" type="HSlider" parent="Input/VignetteLinear"]
+margin_left = 104.0
+margin_right = 229.0
+margin_bottom = 16.0
+rect_min_size = Vector2( 125, 0 )
+max_value = 15.0
+step = 2.0
+tick_count = 5
+ticks_on_borders = true
+
+[node name="HSeparator" type="HSeparator" parent="Input"]
+margin_top = 53.0
+margin_right = 242.0
+margin_bottom = 57.0
 
 [node name="Buttons" type="HBoxContainer" parent="Input"]
-margin_top = 36.0
+margin_top = 61.0
 margin_right = 242.0
-margin_bottom = 61.0
+margin_bottom = 86.0
 custom_constants/separation = 10
 alignment = 1
 
@@ -61,6 +83,7 @@ rect_min_size = Vector2( 75, 25 )
 text = "Reset"
 
 [node name="Player" type="VBoxContainer" parent="."]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 4.0
@@ -134,9 +157,10 @@ rect_min_size = Vector2( 75, 25 )
 text = "Reset"
 
 [connection signal="pressed" from="Input/SnapTurning/SnapTurningCB" to="." method="_on_SnapTurningCB_pressed"]
+[connection signal="value_changed" from="Input/VignetteLinear/VignetteVelocityLimit" to="." method="_on_VignetteVelocityLimit_value_changed"]
 [connection signal="pressed" from="Input/Buttons/Save" to="." method="_on_Save_pressed"]
 [connection signal="pressed" from="Input/Buttons/Reset" to="." method="_on_Reset_pressed"]
-[connection signal="drag_ended" from="Player/PlayerHeight/PlayerHeightSlider" to="." method="_on_PlayerHeightSlider_drag_ended"]
+[connection signal="value_changed" from="Player/PlayerHeight/PlayerHeightSlider" to="." method="_on_PlayerHeightSlider_value_changed"]
 [connection signal="pressed" from="Player/PlayerHeightCalc/PlayerHeightStandard" to="." method="_on_PlayerHeightStandard_pressed"]
 [connection signal="pressed" from="Player/Buttons/Save" to="." method="_on_Save_pressed"]
 [connection signal="pressed" from="Player/Buttons/Reset" to="." method="_on_Reset_pressed"]

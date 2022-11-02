@@ -47,7 +47,7 @@ func physics_movement(_delta: float, player_body: XRToolsPlayerBody, _disabled: 
 		player_body.ground_control_velocity.x += _controller.get_joystick_axis(XRTools.Axis.VR_PRIMARY_X_AXIS) * max_speed
 
 	# Clamp ground control
-	var length := player_body.ground_control_velocity.length()
+	var length : float = player_body.ground_control_velocity.length()
 	if length > max_speed:
 		player_body.ground_control_velocity *= max_speed / length
 

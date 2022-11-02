@@ -1,25 +1,56 @@
 tool
 extends Spatial
+class_name XRToolsVignette
 
+## The current normalised radius (0.0 = vignette is closed, 1.0 = vignette is open) 
 export var radius = 1.0 setget set_radius
+
+## Size of our fade border
 export var fade = 0.05 setget set_fade
+
+## Number of radial steps, the higher the more smooth the edge of the vignette becomes
 export var steps = 32 setget set_steps
 
-export var auto_adjust = true setget set_auto_adjust
+## If auto fade is on, we slow down the opening of the vignette
+## If off, changes are immediate
+export var auto_fade = true setget set_auto_fade
+
+## Normalised radius of vignette when closed
 export var auto_inner_radius = 0.35
+
+## Speed at which we fade out
 export var auto_fade_out_factor = 1.5
+
+## Delay before we start fading out
 export var auto_fade_delay = 1.0
+
+## If auto adjust is on we judge the movement of the player by changes in the
+## origin node and adjust the vignette accordinly.
+## Note that the logic in XRToolsPlayer body is superior
+export var auto_adjust = true setget set_auto_adjust
+
+## If we rotate faster then this we close our vignette (in degrees per second, also used by XRToolsPlayer logic)
 export var auto_rotation_limit = 20.0 setget set_auto_rotation_limit
-export var auto_velocity_limit = 10.0
 
 var material : ShaderMaterial = preload("res://addons/godot-xr-tools/effects/vignette.material")
 
+onready var target_radius = radius
 var auto_first = true
 var fade_delay = 0.0
 var origin_node = null
 var last_origin_basis : Basis
 var last_location : Vector3
 onready var auto_rotation_limit_rad = deg2rad(auto_rotation_limit)
+
+## Setting the target radius allows us to smoothly move to this radius
+## Only to be used with auto fade.
+func set_target_radius(new_radius):
+	target_radius = new_radius
+	if auto_adjust:
+		print("Target radius will be overruled by auto adjust logic")
+	elif !auto_fade:
+		# no fade? just apply
+		set_radius(target_radius)
 
 func set_radius(new_radius):
 	radius = new_radius
@@ -33,6 +64,10 @@ func _update_radius():
 		$Mesh.visible = true
 	else:
 		$Mesh.visible = false
+
+	if !auto_fade and !auto_adjust:
+		# JIC auto fade/adjust are turned on later
+		target_radius = radius
 
 func set_fade(new_fade):
 	fade = new_fade
@@ -80,15 +115,20 @@ func _update_mesh():
 	$Mesh.mesh = arr_mesh
 	$Mesh.set_surface_material(0, material)
 
+func set_auto_fade(new_auto_fade):
+	auto_fade = new_auto_fade
+	if is_inside_tree() and !Engine.editor_hint:
+		_update_auto()
+
 func set_auto_adjust(new_auto_adjust):
 	auto_adjust = new_auto_adjust
 	if is_inside_tree() and !Engine.editor_hint:
-		_update_auto_adjust()
+		_update_auto()
 
-func _update_auto_adjust():
+func _update_auto():
 	# Turn process on if auto adjust is true.
 	# Note we don't turn it off here, we want to finish fading out the vignette if needed
-	if auto_adjust:
+	if auto_fade or auto_adjust:
 		set_process(true)
 
 func set_auto_rotation_limit(new_auto_rotation_limit):
@@ -111,7 +151,7 @@ func _ready():
 		_update_mesh()
 		_update_radius()
 		_update_fade()
-		_update_auto_adjust()
+		_update_auto()
 	else:
 		set_process(false)
 
@@ -127,52 +167,59 @@ func _process(delta):
 		# set to true for next time this is enabled
 		auto_first = true
 
+	if !auto_adjust and !auto_fade:
 		# We are done, turn off process
 		set_process(false)
 
 		return
 
-	if auto_first:
-		# first time we run process since starting, just record transform
+	if auto_adjust:
+		target_radius = 1.0
+
+		if auto_first:
+			# first time we run process since starting, just record transform
+			last_origin_basis = origin_node.global_transform.basis
+			last_location = global_transform.origin
+			auto_first = false
+			return
+
+		# Get our delta transform
+		var delta_b = origin_node.global_transform.basis * last_origin_basis.inverse()
+		var delta_v = global_transform.origin - last_location
+
+		# Adjust radius based on rotation speed of our origin point (not of head movement).
+		# We convert our delta rotation to a quaterion.
+		# A quaternion represents a rotation around an angle.
+		var q = delta_b.get_rotation_quat()
+
+		# We get our angle from our w component and then adjust to get a
+		# rotation speed per second by dividing by delta
+		var angle = (2 * acos(q.w)) / delta
+
+		# Calculate what our radius should be for our rotation speed
+		if auto_rotation_limit > 0:
+			target_radius = 1.0 - (clamp(angle / auto_rotation_limit_rad, 0.0, 1.0) * (1.0 - auto_inner_radius))
+
+		# Now do the same for speed, this includes players physical speed but there isn't much we can do there.
+		if XRToolsUserSettings.vignette_velocity_limit > 0:
+			var velocity = delta_v.length() / delta
+			target_radius = min(target_radius, 1.0 - (clamp(velocity / XRToolsUserSettings.vignette_velocity_limit, 0.0, 1.0) * (1.0 - auto_inner_radius)))
+
 		last_origin_basis = origin_node.global_transform.basis
 		last_location = global_transform.origin
-		auto_first = false
-		return
 
-	# Get our delta transform
-	var delta_b = origin_node.global_transform.basis * last_origin_basis.inverse()
-	var delta_v = global_transform.origin - last_location
-
-	# Adjust radius based on rotation speed of our origin point (not of head movement).
-	# We convert our delta rotation to a quaterion.
-	# A quaternion represents a rotation around an angle.
-	var q = delta_b.get_rotation_quat()
-
-	# We get our angle from our w component and then adjust to get a
-	# rotation speed per second by dividing by delta
-	var angle = (2 * acos(q.w)) / delta
-
-	# Calculate what our radius should be for our rotation speed
-	var target_radius = 1.0
-	if auto_rotation_limit > 0:
-		target_radius = 1.0 - (clamp(angle / auto_rotation_limit_rad, 0.0, 1.0) * (1.0 - auto_inner_radius))
-
-	# Now do the same for speed, this includes players physical speed but there isn't much we can do there.
-	if auto_velocity_limit > 0:
-		var velocity = delta_v.length() / delta
-		target_radius = min(target_radius, 1.0 - (clamp(velocity / auto_velocity_limit, 0.0, 1.0) * (1.0 - auto_inner_radius)))
-
-	# if our radius is small then our current we apply it
-	if target_radius < radius:
+	if auto_fade:
+		# if our radius is small then our current we apply it
+		if target_radius < radius:
+			set_radius(target_radius)
+			fade_delay = auto_fade_delay
+		elif fade_delay > 0.0:
+			fade_delay -= delta
+		else:
+			set_radius(clamp(radius + delta / auto_fade_out_factor, 0.0, 1.0))
+	elif target_radius != radius:
+		# No fade? just apply it
 		set_radius(target_radius)
-		fade_delay = auto_fade_delay
-	elif fade_delay > 0.0:
-		fade_delay -= delta
-	else:
-		set_radius(clamp(radius + delta / auto_fade_out_factor, 0.0, 1.0))
-
-	last_origin_basis = origin_node.global_transform.basis
-	last_location = global_transform.origin
 
 # This method verifies the vignette has a valid configuration.
 # Specifically it checks the following:

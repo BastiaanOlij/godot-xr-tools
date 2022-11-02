@@ -234,6 +234,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/godot-xr-tools/misc/velocity_averager_linear.gd"
 }, {
+"base": "Spatial",
+"class": "XRToolsVignette",
+"language": "GDScript",
+"path": "res://addons/godot-xr-tools/effects/vignette.gd"
+}, {
 "base": "CanvasLayer",
 "class": "XRToolsVirtualKeyboard2D",
 "language": "GDScript",
@@ -290,6 +295,7 @@ _global_script_class_icons={
 "XRToolsStaging": "",
 "XRToolsVelocityAverager": "",
 "XRToolsVelocityAveragerLinear": "",
+"XRToolsVignette": "",
 "XRToolsVirtualKeyboard2D": "",
 "XRToolsWindArea": ""
 }

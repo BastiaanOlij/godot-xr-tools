@@ -6,6 +6,7 @@ export var player_head_height : float = 0.1
 func _update():
 	# Input
 	$Input/SnapTurning/SnapTurningCB.pressed = XRToolsUserSettings.snap_turning
+	$Input/VignetteLinear/VignetteVelocityLimit.value = XRToolsUserSettings.vignette_velocity_limit
 
 	# Player
 	$Player/PlayerHeight/PlayerHeightSlider.value = XRToolsUserSettings.player_height_adjust
@@ -33,10 +34,15 @@ func _on_Reset_pressed():
 func _on_SnapTurningCB_pressed():
 	XRToolsUserSettings.snap_turning = $Input/SnapTurning/SnapTurningCB.pressed
 
-# Player settings changed
-func _on_PlayerHeightSlider_drag_ended(value_changed):
-	XRToolsUserSettings.player_height_adjust = $Player/PlayerHeight/PlayerHeightSlider.value
+func _on_VignetteVelocityLimit_value_changed(value):
+	XRToolsUserSettings.vignette_velocity_limit = value
 
+# Player settings changed (drag_ended only supported on 3.5 it seems...)
+func _on_PlayerHeightSlider_value_changed(value):
+	XRToolsUserSettings.player_height_adjust = value
+
+# func _on_PlayerHeightSlider_drag_ended(value_changed):
+#	XRToolsUserSettings.player_height_adjust = $Player/PlayerHeight/PlayerHeightSlider.value
 
 func _on_PlayerHeightStandard_pressed():
 	if !camera:
@@ -50,5 +56,4 @@ func _on_PlayerHeightStandard_pressed():
 	var height_adjust = XRTools.get_player_standard_height() - base_height
 	XRToolsUserSettings.player_height_adjust = height_adjust
 	$Player/PlayerHeight/PlayerHeightSlider.value = XRToolsUserSettings.player_height_adjust
-
 

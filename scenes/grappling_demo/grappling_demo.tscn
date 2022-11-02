@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=2]
+[gd_scene load_steps=17 format=2]
 
 [ext_resource path="res://addons/godot-xr-tools/staging/scene_base.tscn" type="PackedScene" id=1]
 [ext_resource path="res://addons/godot-xr-tools/functions/movement_grapple.tscn" type="PackedScene" id=2]
@@ -10,7 +10,6 @@
 [ext_resource path="res://addons/godot-xr-tools/functions/function_pickup.tscn" type="PackedScene" id=8]
 [ext_resource path="res://addons/godot-xr-tools/functions/movement_glide.tscn" type="PackedScene" id=9]
 [ext_resource path="res://addons/godot-xr-tools/assets/right_hand.tscn" type="PackedScene" id=10]
-[ext_resource path="res://addons/godot-xr-tools/assets/player_body.tscn" type="PackedScene" id=11]
 [ext_resource path="res://scenes/grappling_demo/objects/moving_platforms.tscn" type="PackedScene" id=12]
 [ext_resource path="res://assets/maps/basic_map.tscn" type="PackedScene" id=13]
 [ext_resource path="res://assets/meshes/teleport/teleport.tscn" type="PackedScene" id=14]
@@ -51,7 +50,6 @@ max_speed = 3.0
 strafe = false
 
 [node name="MovementTurn" parent="ARVROrigin/RightHand" index="2" instance=ExtResource( 7 )]
-smooth_rotation = true
 
 [node name="MovementJump" parent="ARVROrigin/RightHand" index="3" instance=ExtResource( 5 )]
 jump_button_id = 7
@@ -63,13 +61,11 @@ grapple_collision_mask = 2
 grab_collision_mask = 3
 ranged_enable = false
 
-[node name="PlayerBody" parent="ARVROrigin" index="3" instance=ExtResource( 11 )]
-
-[node name="MovementClimb" parent="ARVROrigin" index="4" instance=ExtResource( 4 )]
+[node name="MovementClimb" parent="ARVROrigin" index="3" instance=ExtResource( 4 )]
 left_pickup = NodePath("../LeftHand/FunctionPickup")
 right_pickup = NodePath("../RightHand/FunctionPickup")
 
-[node name="MovementGlide" parent="ARVROrigin" index="5" instance=ExtResource( 9 )]
+[node name="MovementGlide" parent="ARVROrigin" index="4" instance=ExtResource( 9 )]
 
 [node name="BasicMap" parent="." index="1" instance=ExtResource( 13 )]
 

@@ -2,6 +2,7 @@ extends Node
 
 # our settings
 export var snap_turning : bool = true
+export var vignette_velocity_limit : float = 10.0
 export var player_height_adjust : float = 0.0 setget set_player_height_adjust
 
 var settings_file_name = "user://xtools_user_settings.json"
@@ -13,6 +14,7 @@ func set_player_height_adjust(new_value : float) -> void:
 func reset_to_defaults():
 	# Reset to defaults
 	snap_turning = XRTools.get_default_snap_turning()
+	vignette_velocity_limit = 10.0
 	player_height_adjust = 0.0
 
 
@@ -36,6 +38,8 @@ func _load():
 			var input : Dictionary = data["input"]
 			if input.has("default_snap_turning"):
 				snap_turning = input["default_snap_turning"]
+			if input.has("vignette_velocity_limit"):
+				vignette_velocity_limit = input["vignette_velocity_limit"]
 
 		# Parse our player settings
 		if data.has("player"):
@@ -46,7 +50,8 @@ func _load():
 func save():
 	var data = {
 		"input" : {
-			"default_snap_turning" : snap_turning
+			"default_snap_turning" : snap_turning,
+			"vignette_velocity_limit" : vignette_velocity_limit
 		},
 		"player" : {
 			"height_adjust" : player_height_adjust
