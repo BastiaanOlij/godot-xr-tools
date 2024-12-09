@@ -270,13 +270,13 @@ func _physics_process(delta: float):
 	gravity = gravity_state.total_gravity
 
 	# Update the kinematic body to be under the camera
-	_update_body_under_camera(delta)
-
-	# Allow the movement providers a chance to perform pre-movement updates. The providers can:
-	# - Adjust the gravity direction
-	for p in _movement_providers:
-		if p.enabled:
-			p.physics_pre_movement(delta, self)
+	if _update_body_under_camera(delta):
+		# Allow the movement providers a chance to perform pre-movement updates. The providers can:
+		# - Adjust the gravity direction
+		# Note, we skip this if the player couldn't properly move to their physical location.
+		for p in _movement_providers:
+			if p.enabled:
+				p.physics_pre_movement(delta, self)
 
 	# Determine the gravity "up" direction and plane
 	if gravity.is_equal_approx(Vector3.ZERO):
@@ -506,7 +506,8 @@ func _estimate_body_forward_dir() -> Vector3:
 	return forward
 
 # This method updates the player body to match the player position
-func _update_body_under_camera(delta : float):
+# Returns true if we positioned our player body fully
+func _update_body_under_camera(delta : float) -> bool:
 	# Initially calibration of player height
 	if player_calibrate_height:
 		calibrate_player_height()
@@ -566,7 +567,7 @@ func _update_body_under_camera(delta : float):
 			current_height + player_height_rate * delta,
 			player_height)
 
-		# Calculate a reduced height - slghtly smaller than the current player
+		# Calculate a reduced height - slightly smaller than the current player
 		# height so we can cast a virtual head up and probe the where we hit the
 		# ceiling.
 		var reduced_height : float = max(
@@ -596,21 +597,36 @@ func _update_body_under_camera(delta : float):
 	_collision_node.shape.height = player_height
 	_collision_node.transform.origin.y = (player_height / 2.0)
 
-	# Center the kinematic body on the ground under the camera
-	var curr_transform := global_transform
+	# Move the kinematic body on the ground under the camera
+	var target_transform := global_transform
 	var camera_transform := camera_node.global_transform
-	curr_transform.basis = origin_node.global_transform.basis
-	curr_transform.origin = camera_transform.origin
-	curr_transform.origin += up_player * (player_head_height - player_height)
+	target_transform.basis = origin_node.global_transform.basis
+	target_transform.origin = camera_transform.origin
+	target_transform.origin += up_player * (player_head_height - player_height)
 
 	# The camera/eyes are towards the front of the body, so move the body back slightly
 	var forward_dir := _estimate_body_forward_dir()
 	if forward_dir.length() > 0.01:
-		curr_transform = curr_transform.looking_at(curr_transform.origin + forward_dir, up_player)
-		curr_transform.origin -= forward_dir.normalized() * eye_forward_offset * player_radius
+		target_transform = target_transform.looking_at(target_transform.origin + forward_dir, up_player)
+		target_transform.origin -= forward_dir.normalized() * eye_forward_offset * player_radius
 
-	# Set the body position
-	global_transform = curr_transform
+	# Face player in the correct direction
+	global_basis = target_transform.basis
+
+	# Move player level with our target location
+	var ground_plane = Plane(global_basis.y, target_transform.origin)
+	global_position = ground_plane.project(global_position)
+
+	# Attempt to move our body there
+	move_body(target_transform.origin - global_position)
+	if (target_transform.origin - global_position).length() > 0.001:
+		# We couldn't move here, see if we can move our head
+		
+		# Let calling function know we could not reach where we're standing
+		return false
+
+	# We're good
+	return true
 
 # This method updates the information about the ground under the players feet
 func _update_ground_information(delta: float):
